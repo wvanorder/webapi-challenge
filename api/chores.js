@@ -124,8 +124,6 @@ choresRouter.post('/chores', (req, res) => {
         ...req.body,
         id: idNum
     }
-
-
     //matching user makes sure a user exists to assign that chore
     const matchingUser = userArr.filter(user => {
         console.log(user.id, req.body.user_id)
@@ -142,35 +140,38 @@ choresRouter.post('/chores', (req, res) => {
 })
 
 //delete a chore
-choresRouter.delete('/chores/:id', (req, res) => {
-    for(let i = 0; i < choresArr.length; i++){
-        if(choresArr[i].id == req.params.id){
-           choresArr.splice(i, 1); 
+choresRouter.delete('/chores/:id', validateChore, (req, res) => {
+    if(req.chore.length) {
+        for(let i = 0; i < choresArr.length; i++){
+            if(choresArr[i].id == req.params.id){
+               choresArr.splice(i, 1); 
+            }
         }
+        res.status(200).json({ your: 'chore was deleted.'});
+    } else{
+        res.status(404).json({ error: 'chore does not exist' });
     }
-    res.status(200).json({ your: 'chore was deleted.'});
+    
 });
 
 //update a chore
 choresRouter.put('/chores/:id', validateChore, (req, res) => {
-    if(req.chore.length){
+    if(!req.chore.length){
+        return res.status(404).json({ error: 'that chore does not exist' });
+    } 
+       
         const newObj = req.body;
-
         const matchingUser = userArr.filter(user => {
             console.log(user.id, req.body.user_id)
             return user.id == req.body.user_id? req.body.user_id : req.chore.user_id;
         });
-
-    
     console.log(newObj);
     if(req.body && matchingUser.length) {
         for(let i = 0; i < choresArr.length; i++){
             if(choresArr[i].id == req.params.id){
                choresArr[i] = {
                    ...choresArr[i],
-                   description: newObj.description? newObj.description : choresArr[i].description,
-                   notes: newObj.notes? newObj.notes : choresArr[i].notes,
-                   user_id: newObj.user_id? newObj.user_id : choresArr[i].user_id
+                   ...newObj
                }
             }
         }
@@ -178,11 +179,6 @@ choresRouter.put('/chores/:id', validateChore, (req, res) => {
     } else{
         res.status(404).json({ error: 'I need something to update with, or a real user' });
     }
-    
-    } else{
-        res.status(404).json({ error: 'that chore does not exist' });
-    }
-    
 })
 
 

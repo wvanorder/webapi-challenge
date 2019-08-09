@@ -3,12 +3,10 @@ const express = require('express');
 
 const server = express();
 
-// const userRouter = require('./api/users');
 const choresRouter = require('./api/chores');
 
 
 server.use(express.json());
-// server.use('/api/users', userRouter);
 server.use('/api', choresRouter);
 
 
