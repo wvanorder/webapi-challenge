@@ -90,7 +90,13 @@ choresRouter.get('/users', (req, res) => {
 
 //get all chores
 choresRouter.get('/chores', (req, res) => {
-    res.status(200).json(choresArr);
+    if(req.query.completed){
+        res.status(200).json(choresArr.filter(chore => {
+            return chore.completed === true
+        }));
+    } else {
+        res.status(200).json(choresArr);
+    }
 })
 
 //get chores for specific user
