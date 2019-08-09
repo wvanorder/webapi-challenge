@@ -82,9 +82,12 @@ const userArr = [
 
 let idNum = 8;
 
-//get all users
+//get all users or specific user
+
 choresRouter.get('/users', (req, res) => {
-    res.status(200).json(userArr);
+    console.log(req.query.name)
+        res.status(200).json(userArr);
+    
 });
 
 
@@ -121,7 +124,15 @@ choresRouter.post('/chores', (req, res) => {
         ...req.body,
         id: idNum
     }
-    if(req.body && req.body.description && req.body.user_id){
+
+
+    //matching user makes sure a user exists to assign that chore
+    const matchingUser = userArr.filter(user => {
+        console.log(user.id, req.body.user_id)
+        return user.id == req.body.user_id;
+    });
+    console.log(matchingUser);
+    if(req.body && req.body.description && req.body.user_id && matchingUser.length ){
         choresArr.push(newChore);
         res.status(200).json({ your: 'new chore has been assigned'});
         idNum ++;
@@ -141,10 +152,18 @@ choresRouter.delete('/chores/:id', (req, res) => {
 });
 
 //update a chore
-choresRouter.put('/chores/:id', (req, res) => {
-    const newObj = req.body;
+choresRouter.put('/chores/:id', validateChore, (req, res) => {
+    if(req.chore.length){
+        const newObj = req.body;
+
+        const matchingUser = userArr.filter(user => {
+            console.log(user.id, req.body.user_id)
+            return user.id == req.body.user_id? req.body.user_id : req.chore.user_id;
+        });
+
+    
     console.log(newObj);
-    if(req.body) {
+    if(req.body && matchingUser.length) {
         for(let i = 0; i < choresArr.length; i++){
             if(choresArr[i].id == req.params.id){
                choresArr[i] = {
@@ -157,7 +176,11 @@ choresRouter.put('/chores/:id', (req, res) => {
         }
         res.status(200).json({ your: 'chore was updated.'});
     } else{
-        res.status(404).json({ error: 'I need something to update with' });
+        res.status(404).json({ error: 'I need something to update with, or a real user' });
+    }
+    
+    } else{
+        res.status(404).json({ error: 'that chore does not exist' });
     }
     
 })
@@ -167,6 +190,13 @@ choresRouter.put('/chores/:id', (req, res) => {
 function validateUser(req, res, next) {
     req.user = userArr.filter(user => {
         return user.id == req.params.id
+    });
+    next();
+}
+
+function validateChore(req, res, next) {
+    req.chore = choresArr.filter(chore => {
+        return chore.id == req.params.id
     });
     next();
 }
